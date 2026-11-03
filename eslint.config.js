@@ -19,7 +19,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/auth.jsx'],
+    files: ['src/auth.jsx', 'src/toast.jsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

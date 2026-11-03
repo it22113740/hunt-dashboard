@@ -7,6 +7,7 @@ import { Page } from '../components/Page'
 import { onboardStore } from '../lib/api'
 import { temporaryPassword } from '../lib/format'
 import { lookupCoordinates } from '../lib/geo'
+import { useToast } from '../toast'
 
 const categories = ['Restaurant', 'Bar', 'Cafe', 'Pub', 'Lounge', 'Other']
 
@@ -54,6 +55,7 @@ function validate(form) {
 
 export function Onboard() {
   const navigate = useNavigate()
+  const toast = useToast()
   const [form, setForm] = useState(initial)
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
@@ -81,6 +83,7 @@ export function Onboard() {
       set('lng', hit.lng.toFixed(6))
       setPlace(hit.label)
       setErrors((current) => ({ ...current, lat: undefined, lng: undefined, address: undefined }))
+      toast('Coordinates found')
     } catch (error) {
       setFormError(error.message)
     } finally {
@@ -92,6 +95,7 @@ export function Onboard() {
     try {
       await navigator.clipboard.writeText(form.password)
       setCopied(true)
+      toast('Password copied')
     } catch {
       setFormError('Select the password and copy it manually.')
     }
@@ -118,7 +122,8 @@ export function Onboard() {
         category: form.category,
         description: form.description.trim() || undefined,
       })
-      navigate('/stores', { state: { notice: result.message } })
+      toast(result.message)
+      navigate('/stores')
     } catch (error) {
       setFormError(error.message || 'The store was not onboarded.')
     } finally {
@@ -186,6 +191,7 @@ export function Onboard() {
                 setCopied(false)
                 setShowPassword(true)
                 set('password', temporaryPassword())
+                toast('Password generated')
               }}
             >
               Generate a password

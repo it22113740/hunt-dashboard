@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth'
+import { useToast } from '../toast'
 
 const links = [
   { to: '/', label: 'Overview', end: true },
@@ -10,6 +11,7 @@ const links = [
 
 export function Shell() {
   const { session, signOut } = useAuth()
+  const toast = useToast()
 
   return (
     <div className="shell">
@@ -37,7 +39,14 @@ export function Shell() {
           <span className="rail__email" title={session?.user?.email}>
             {session?.user?.email}
           </span>
-          <button type="button" className="btn btn--quiet" onClick={signOut}>
+          <button
+            type="button"
+            className="btn btn--quiet"
+            onClick={() => {
+              toast('Signed out')
+              signOut()
+            }}
+          >
             Sign out
           </button>
         </div>

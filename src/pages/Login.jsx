@@ -5,9 +5,11 @@ import { Banner } from '../components/Banner'
 import { Field } from '../components/Field'
 import { describedBy } from '../lib/form'
 import { login } from '../lib/api'
+import { useToast } from '../toast'
 
 export function Login() {
   const { session, signIn } = useAuth()
+  const toast = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState({})
@@ -36,6 +38,7 @@ export function Login() {
         setFormError('This desk is only for the Hunt superadmin.')
         return
       }
+      toast('Signed in')
       signIn(result)
     } catch (error) {
       setFormError(error.message || 'Sign in failed.')

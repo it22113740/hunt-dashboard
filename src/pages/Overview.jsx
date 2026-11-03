@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Banner } from '../components/Banner'
 import { Page } from '../components/Page'
+import { FactsSkeleton, ScoreSkeleton, StoreTableSkeleton } from '../components/Skeleton'
 import { ScoreSheet } from '../components/ScoreSheet'
 import { StoreTable } from '../components/StoreTable'
 import { overview } from '../lib/api'
@@ -30,7 +31,16 @@ export function Overview() {
       title="Overview"
       lede="Approved and rejected photos and videos, the stores on Hunt, and who is banned."
     >
-      {state.status === 'loading' ? <p className="status-line">Loading the desk.</p> : null}
+      {state.status === 'loading' ? (
+        <>
+          <ScoreSkeleton compact />
+          <FactsSkeleton />
+          <div className="section-head">
+            <h2>Latest stores</h2>
+          </div>
+          <StoreTableSkeleton caption="Loading the latest stores" />
+        </>
+      ) : null}
       {state.status === 'error' ? <Banner tone="error">{state.error.message}</Banner> : null}
       {state.status === 'ready' ? (
         <>

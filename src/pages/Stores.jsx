@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Banner } from '../components/Banner'
 import { Page } from '../components/Page'
 import { Pager } from '../components/Pager'
+import { StoreTableSkeleton } from '../components/Skeleton'
 import { StoreTable } from '../components/StoreTable'
 import { listStores } from '../lib/api'
 
 const LIMIT = 25
 
 export function Stores() {
-  const location = useLocation()
-  const notice = location.state?.notice
   const [draft, setDraft] = useState('')
   const [q, setQ] = useState('')
   const [offset, setOffset] = useState(0)
@@ -61,7 +60,6 @@ export function Stores() {
         </Link>
       }
     >
-      {notice ? <Banner tone="good">{notice}</Banner> : null}
       <form className="toolbar" role="search" onSubmit={(event) => event.preventDefault()}>
         <label className="search">
           <span>Search</span>
@@ -73,7 +71,7 @@ export function Stores() {
           />
         </label>
       </form>
-      {state.status === 'loading' ? <p className="status-line">Loading stores.</p> : null}
+      {state.status === 'loading' ? <StoreTableSkeleton /> : null}
       {state.status === 'error' ? <Banner tone="error">{state.error.message}</Banner> : null}
       {state.status === 'ready' && items.length ? (
         <>

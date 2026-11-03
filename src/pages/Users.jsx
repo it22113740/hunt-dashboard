@@ -5,6 +5,8 @@ import { Field } from '../components/Field'
 import { describedBy } from '../lib/form'
 import { Page } from '../components/Page'
 import { Pager } from '../components/Pager'
+import { UserTableSkeleton } from '../components/Skeleton'
+import { useToast } from '../toast'
 import { banUser, listUsers, unbanUser } from '../lib/api'
 import { formatDate, roleLabel } from '../lib/format'
 
@@ -16,6 +18,7 @@ const filters = [
 ]
 
 export function Users() {
+  const toast = useToast()
   const [draft, setDraft] = useState('')
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('all')
@@ -84,8 +87,13 @@ export function Users() {
     }
     setBusy(true)
     try {
-      if (pending.action === 'ban') await banUser(pending.user.id, reason.trim())
-      else await unbanUser(pending.user.id)
+      if (pending.action === 'ban') {
+        await banUser(pending.user.id, reason.trim())
+        toast(`Banned ${pending.user.email}`)
+      } else {
+        await unbanUser(pending.user.id)
+        toast(`Restored access for ${pending.user.email}`)
+      }
       setPending(null)
       setReason('')
       setReasonError('')
@@ -129,7 +137,7 @@ export function Users() {
           </button>
         ))}
       </div>
-      {state.status === 'loading' ? <p className="status-line">Loading users.</p> : null}
+      {state.status === 'loading' ? <UserTableSkeleton /> : null}
       {state.status === 'error' ? <Banner tone="error">{state.error.message}</Banner> : null}
       {state.status === 'ready' && items.length ? (
         <>

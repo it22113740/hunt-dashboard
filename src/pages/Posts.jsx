@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Banner } from '../components/Banner'
 import { Page } from '../components/Page'
 import { Pager } from '../components/Pager'
+import { ScoreSkeleton, StoreTableSkeleton } from '../components/Skeleton'
 import { ScoreSheet } from '../components/ScoreSheet'
 import { StoreTable } from '../components/StoreTable'
 import { listStores, overview } from '../lib/api'
@@ -68,7 +69,7 @@ export function Posts() {
 
   return (
     <Page title="Posts" lede="Approved and rejected photos and videos across every store.">
-      {desk.status === 'loading' ? <p className="status-line">Loading post counts.</p> : null}
+      {desk.status === 'loading' ? <ScoreSkeleton /> : null}
       {desk.status === 'error' ? <Banner tone="error">{desk.error.message}</Banner> : null}
       {desk.status === 'ready' ? <ScoreSheet media={desk.data.media} /> : null}
       <div className="section-head">
@@ -85,7 +86,7 @@ export function Posts() {
           />
         </label>
       </form>
-      {stores.status === 'loading' ? <p className="status-line">Loading stores.</p> : null}
+      {stores.status === 'loading' ? <StoreTableSkeleton caption="Loading stores" /> : null}
       {stores.status === 'error' ? <Banner tone="error">{stores.error.message}</Banner> : null}
       {stores.status === 'ready' && items.length ? (
         <>
