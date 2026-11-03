@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { me, setUnauthorizedHandler } from './lib/api'
+import { clearDeskCache } from './lib/cache'
 import { clearSession, readSession, saveSession } from './lib/session'
 
 const AuthContext = createContext(null)
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
         if (!live) return
         if (user.role !== 'SUPERADMIN') {
           clearSession()
+          clearDeskCache()
           setSession(null)
         }
       },
@@ -46,6 +48,7 @@ export function AuthProvider({ children }) {
       },
       signOut() {
         clearSession()
+        clearDeskCache()
         setSession(null)
       },
     }),

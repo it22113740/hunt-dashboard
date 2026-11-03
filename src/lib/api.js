@@ -1,3 +1,4 @@
+import { dropCache } from './cache'
 import { clearSession, getToken } from './session'
 
 const base = import.meta.env.VITE_API_URL ?? ''
@@ -45,6 +46,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   const data = await response.json().catch(() => null)
   if (response.status === 401 && auth) {
     clearSession()
+    dropCache()
     onUnauthorized()
   }
   if (!response.ok) throw new ApiError(messageFrom(data), response.status)
@@ -80,8 +82,18 @@ export function listStores(params) {
   return request(`/admin/stores${query(params)}`)
 }
 
+function deskChanged() {
+  dropCache('overview')
+  dropCache('stores:')
+  dropCache('users:')
+  dropCache('owners')
+}
+
 export function onboardStore(body) {
-  return request('/admin/stores', { method: 'POST', body })
+  return request('/admin/stores', { method: 'POST', body }).then((data) => {
+    deskChanged()
+    return data
+  })
 }
 
 export function listUsers(params) {
@@ -92,9 +104,15 @@ export function banUser(id, reason) {
   return request(`/admin/users/${encodeURIComponent(id)}/ban`, {
     method: 'POST',
     body: { reason },
+  }).then((data) => {
+    deskChanged()
+    return data
   })
 }
 
 export function unbanUser(id) {
-  return request(`/admin/users/${encodeURIComponent(id)}/unban`, { method: 'POST' })
+  return request(`/admin/users/${encodeURIComponent(id)}/unban`, { method: 'POST' }).then((data) => {
+    deskChanged()
+    return data
+  })
 }

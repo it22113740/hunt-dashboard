@@ -9,6 +9,7 @@ import { UserTableSkeleton } from '../components/Skeleton'
 import { useToast } from '../toast'
 import { banUser, listUsers, unbanUser } from '../lib/api'
 import { formatDate, roleLabel } from '../lib/format'
+import { useQuery } from '../lib/query'
 
 const LIMIT = 25
 const filters = [
@@ -23,8 +24,7 @@ export function Users() {
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('all')
   const [offset, setOffset] = useState(0)
-  const [version, setVersion] = useState(0)
-  const [state, setState] = useState({ status: 'loading', data: null, error: null })
+  const state = useQuery(`users:${q}:${status}:${offset}`, () => listUsers({ q, status, offset, limit: LIMIT }))
   const [pending, setPending] = useState(null)
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
@@ -34,39 +34,21 @@ export function Users() {
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
-  useEffect(() => {
-    let live = true
-    listUsers({ q, status, offset, limit: LIMIT }).then(
-      (data) => {
-        if (live) setState({ status: 'ready', data, error: null })
-      },
-      (error) => {
-        if (live) setState({ status: 'error', data: null, error })
-      },
-    )
-    return () => {
-      live = false
-    }
-  }, [q, status, offset, version])
-
   function onSearch(value) {
     setDraft(value)
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => {
-      setState({ status: 'loading', data: null, error: null })
       setOffset(0)
       setQ(value.trim())
     }, 250)
   }
 
   function onFilter(next) {
-    setState({ status: 'loading', data: null, error: null })
     setOffset(0)
     setStatus(next)
   }
 
   function onPage(next) {
-    setState({ status: 'loading', data: null, error: null })
     setOffset(next)
   }
 
@@ -97,8 +79,7 @@ export function Users() {
       setPending(null)
       setReason('')
       setReasonError('')
-      setState({ status: 'loading', data: null, error: null })
-      setVersion((value) => value + 1)
+      state.refresh()
     } catch (error) {
       setActionError(error.message || 'That change did not save.')
     } finally {

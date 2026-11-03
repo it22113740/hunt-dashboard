@@ -6,6 +6,7 @@ import { Pager } from '../components/Pager'
 import { StoreTableSkeleton } from '../components/Skeleton'
 import { StoreTable } from '../components/StoreTable'
 import { listStores } from '../lib/api'
+import { useQuery } from '../lib/query'
 
 const LIMIT = 25
 
@@ -13,38 +14,23 @@ export function Stores() {
   const [draft, setDraft] = useState('')
   const [q, setQ] = useState('')
   const [offset, setOffset] = useState(0)
-  const [state, setState] = useState({ status: 'loading', data: null, error: null })
+  const state = useQuery(`stores:newest:${q}:${offset}`, () =>
+    listStores({ q, offset, limit: LIMIT, sort: 'newest' }),
+  )
   const timer = useRef(0)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  useEffect(() => {
-    let live = true
-    listStores({ q, offset, limit: LIMIT, sort: 'newest' }).then(
-      (data) => {
-        if (live) setState({ status: 'ready', data, error: null })
-      },
-      (error) => {
-        if (live) setState({ status: 'error', data: null, error })
-      },
-    )
-    return () => {
-      live = false
-    }
-  }, [q, offset])
 
   function onSearch(value) {
     setDraft(value)
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => {
-      setState({ status: 'loading', data: null, error: null })
       setOffset(0)
       setQ(value.trim())
     }, 250)
   }
 
   function onPage(next) {
-    setState({ status: 'loading', data: null, error: null })
     setOffset(next)
   }
 

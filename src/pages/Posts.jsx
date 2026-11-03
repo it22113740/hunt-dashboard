@@ -7,6 +7,7 @@ import { ScoreSkeleton, StoreTableSkeleton } from '../components/Skeleton'
 import { ScoreSheet } from '../components/ScoreSheet'
 import { StoreTable } from '../components/StoreTable'
 import { listStores, overview } from '../lib/api'
+import { useQuery } from '../lib/query'
 
 const LIMIT = 25
 
@@ -14,54 +15,24 @@ export function Posts() {
   const [draft, setDraft] = useState('')
   const [q, setQ] = useState('')
   const [offset, setOffset] = useState(0)
-  const [desk, setDesk] = useState({ status: 'loading', data: null, error: null })
-  const [stores, setStores] = useState({ status: 'loading', data: null, error: null })
+  const desk = useQuery('overview', overview)
+  const stores = useQuery(`stores:rejected:${q}:${offset}`, () =>
+    listStores({ q, offset, limit: LIMIT, sort: 'rejected' }),
+  )
   const timer = useRef(0)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
-
-  useEffect(() => {
-    let live = true
-    overview().then(
-      (data) => {
-        if (live) setDesk({ status: 'ready', data, error: null })
-      },
-      (error) => {
-        if (live) setDesk({ status: 'error', data: null, error })
-      },
-    )
-    return () => {
-      live = false
-    }
-  }, [])
-
-  useEffect(() => {
-    let live = true
-    listStores({ q, offset, limit: LIMIT, sort: 'rejected' }).then(
-      (data) => {
-        if (live) setStores({ status: 'ready', data, error: null })
-      },
-      (error) => {
-        if (live) setStores({ status: 'error', data: null, error })
-      },
-    )
-    return () => {
-      live = false
-    }
-  }, [q, offset])
 
   function onSearch(value) {
     setDraft(value)
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => {
-      setStores({ status: 'loading', data: null, error: null })
       setOffset(0)
       setQ(value.trim())
     }, 250)
   }
 
   function onPage(next) {
-    setStores({ status: 'loading', data: null, error: null })
     setOffset(next)
   }
 

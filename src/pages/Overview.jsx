@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Banner } from '../components/Banner'
 import { Page } from '../components/Page'
@@ -7,24 +6,10 @@ import { ScoreSheet } from '../components/ScoreSheet'
 import { StoreTable } from '../components/StoreTable'
 import { overview } from '../lib/api'
 import { formatCount } from '../lib/format'
+import { useQuery } from '../lib/query'
 
 export function Overview() {
-  const [state, setState] = useState({ status: 'loading', data: null, error: null })
-
-  useEffect(() => {
-    let live = true
-    overview().then(
-      (data) => {
-        if (live) setState({ status: 'ready', data, error: null })
-      },
-      (error) => {
-        if (live) setState({ status: 'error', data: null, error })
-      },
-    )
-    return () => {
-      live = false
-    }
-  }, [])
+  const state = useQuery('overview', overview)
 
   return (
     <Page

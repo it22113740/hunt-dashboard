@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Banner } from '../components/Banner'
 import { Field } from '../components/Field'
@@ -7,7 +7,24 @@ import { Page } from '../components/Page'
 import { listUsers, onboardStore } from '../lib/api'
 import { temporaryPassword } from '../lib/format'
 import { lookupCoordinates } from '../lib/geo'
+import { useQuery } from '../lib/query'
 import { useToast } from '../toast'
+
+async function loadOwners() {
+  const pages = []
+  let offset = 0
+  let total = Infinity
+  while (offset < total && offset < 500) {
+    const page = await listUsers({ role: 'owner', limit: 100, offset })
+    const items = (page.items ?? []).filter((user) => user.role === 'OWNER')
+    pages.push(...items)
+    total = page.total ?? pages.length
+    offset += page.items?.length ?? 0
+    if (!page.items?.length) break
+  }
+  pages.sort((a, b) => a.email.localeCompare(b.email))
+  return pages
+}
 
 const categories = ['Restaurant', 'Bar', 'Cafe', 'Pub', 'Lounge', 'Other']
 
@@ -69,37 +86,15 @@ export function Onboard() {
   const [showPassword, setShowPassword] = useState(false)
   const [copied, setCopied] = useState(false)
   const [mode, setMode] = useState('new')
-  const [owners, setOwners] = useState({ status: 'idle', items: [], error: '' })
-
-  useEffect(() => {
-    if (mode !== 'existing') return undefined
-    let live = true
-    const pages = []
-    const load = async () => {
-      let offset = 0
-      let total = Infinity
-      while (offset < total && offset < 500) {
-        const page = await listUsers({ role: 'owner', limit: 100, offset })
-        const items = (page.items ?? []).filter((user) => user.role === 'OWNER')
-        pages.push(...items)
-        total = page.total ?? pages.length
-        offset += page.items?.length ?? 0
-        if (!page.items?.length) break
-      }
-      pages.sort((a, b) => a.email.localeCompare(b.email))
-      if (live) setOwners({ status: 'ready', items: pages, error: '' })
-    }
-    load().catch((error) => {
-      if (live) setOwners({ status: 'error', items: [], error: error.message || 'Owners could not be loaded.' })
-    })
-    return () => {
-      live = false
-    }
-  }, [mode])
+  const ownersQuery = useQuery(mode === 'existing' ? 'owners' : null, loadOwners)
+  const owners = {
+    status: ownersQuery.status,
+    items: ownersQuery.data ?? [],
+    error: ownersQuery.error?.message || '',
+  }
 
   function chooseMode(next) {
     setMode(next)
-    if (next === 'existing') setOwners({ status: 'loading', items: [], error: '' })
     setForm((current) => ({ ...current, ownerEmail: '', password: '' }))
     setCopied(false)
     setErrors((current) => ({ ...current, ownerEmail: undefined, password: undefined }))
