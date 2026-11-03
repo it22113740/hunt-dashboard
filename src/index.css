@@ -104,14 +104,27 @@ button:disabled { cursor: not-allowed; }
   text-decoration: none;
   color: var(--ink);
 }
-.rail__brand strong {
-  display: block;
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1;
+.wordmark {
+  display: inline-flex;
+  align-items: flex-end;
+  color: inherit;
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 0.8;
 }
-.rail__brand span {
+.wordmark__dot {
+  width: 0.42em;
+  height: 0.42em;
+  margin: 0 0 -0.01em 0.03em;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+.rail__brand .wordmark {
+  font-size: 34px;
+  color: var(--ink);
+}
+.rail__role {
   display: block;
   margin-top: 6px;
   color: var(--mute);
@@ -416,22 +429,18 @@ legend {
   justify-content: space-between;
   gap: 32px;
   padding: 48px;
-  background: var(--ink);
+  background: #000;
   color: white;
 }
 .login__brand h1 {
-  color: white;
-  font-size: clamp(72px, 10vw, 120px);
-  letter-spacing: -0.05em;
-  line-height: 0.85;
+  margin-bottom: 22px;
+  color: #fff;
+  font-size: clamp(72px, 10vw, 128px);
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 0.8;
 }
-.login__rule {
-  width: 72px;
-  height: 6px;
-  margin: 22px 0;
-  border: 0;
-  background: var(--accent);
-}
+.login__brand .wordmark { color: #fff; }
 .login__brand p { max-width: 22ch; font-size: 20px; }
 .login__mark { color: #c4c4c2; font-size: 16px; }
 .login__form {

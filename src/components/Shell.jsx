@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth'
+import { Wordmark } from './Wordmark'
 import { useToast } from '../toast'
 
 const links = [
@@ -19,9 +20,9 @@ export function Shell() {
         Skip to content
       </a>
       <aside className="rail">
-        <NavLink to="/" className="rail__brand" end>
-          <strong>Hunt</strong>
-          <span>Superadmin</span>
+        <NavLink to="/" className="rail__brand" end aria-label="Hunt, overview">
+          <Wordmark />
+          <span className="rail__role">Superadmin</span>
         </NavLink>
         <nav className="rail__nav" aria-label="Desk">
           {links.map((link) => (

@@ -5,6 +5,7 @@ import { Banner } from '../components/Banner'
 import { Field } from '../components/Field'
 import { describedBy } from '../lib/form'
 import { login } from '../lib/api'
+import { Wordmark } from '../components/Wordmark'
 import { useToast } from '../toast'
 
 export function Login() {
@@ -51,8 +52,9 @@ export function Login() {
     <div className="login">
       <section className="login__brand">
         <div>
-          <h1>Hunt</h1>
-          <hr className="login__rule" />
+          <h1>
+            <Wordmark />
+          </h1>
           <p>The desk for stores, posts, and bans.</p>
         </div>
         <p className="login__mark">Superadmin</p>
