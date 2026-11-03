@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Banner } from '../components/Banner'
 import { Field } from '../components/Field'
 import { describedBy } from '../lib/form'
 import { Page } from '../components/Page'
-import { onboardStore } from '../lib/api'
+import { listUsers, onboardStore } from '../lib/api'
 import { temporaryPassword } from '../lib/format'
 import { lookupCoordinates } from '../lib/geo'
 import { useToast } from '../toast'
@@ -31,12 +31,16 @@ function whole(value, min, max) {
   return Number.isInteger(number) && number >= min && number <= max
 }
 
-function validate(form) {
+function validate(form, mode) {
   const errors = {}
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.ownerEmail.trim())) {
-    errors.ownerEmail = 'Enter the owner email.'
+  if (mode === 'existing') {
+    if (!form.ownerEmail) errors.ownerEmail = 'Select an owner.'
+  } else {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.ownerEmail.trim())) {
+      errors.ownerEmail = 'Enter the owner email.'
+    }
+    if (form.password.length < 8) errors.password = 'Use at least 8 characters.'
   }
-  if (form.password.length < 8) errors.password = 'Use at least 8 characters.'
   if (form.name.trim().length < 2) errors.name = 'Use at least 2 characters.'
   if (!form.address.trim()) errors.address = 'Enter the store address.'
   if (form.lat.trim() === '' || Number(form.lat) < -90 || Number(form.lat) > 90) {
@@ -64,6 +68,43 @@ export function Onboard() {
   const [place, setPlace] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [mode, setMode] = useState('new')
+  const [owners, setOwners] = useState({ status: 'idle', items: [], error: '' })
+
+  useEffect(() => {
+    if (mode !== 'existing') return undefined
+    let live = true
+    const pages = []
+    const load = async () => {
+      let offset = 0
+      let total = Infinity
+      while (offset < total && offset < 500) {
+        const page = await listUsers({ role: 'owner', limit: 100, offset })
+        const items = (page.items ?? []).filter((user) => user.role === 'OWNER')
+        pages.push(...items)
+        total = page.total ?? pages.length
+        offset += page.items?.length ?? 0
+        if (!page.items?.length) break
+      }
+      pages.sort((a, b) => a.email.localeCompare(b.email))
+      if (live) setOwners({ status: 'ready', items: pages, error: '' })
+    }
+    load().catch((error) => {
+      if (live) setOwners({ status: 'error', items: [], error: error.message || 'Owners could not be loaded.' })
+    })
+    return () => {
+      live = false
+    }
+  }, [mode])
+
+  function chooseMode(next) {
+    setMode(next)
+    if (next === 'existing') setOwners({ status: 'loading', items: [], error: '' })
+    setForm((current) => ({ ...current, ownerEmail: '', password: '' }))
+    setCopied(false)
+    setErrors((current) => ({ ...current, ownerEmail: undefined, password: undefined }))
+    setFormError('')
+  }
 
   function set(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -103,15 +144,16 @@ export function Onboard() {
 
   async function onSubmit(event) {
     event.preventDefault()
-    const next = validate(form)
+    const next = validate(form, mode)
     setErrors(next)
     setFormError('')
     if (Object.keys(next).length) return
     setBusy(true)
     try {
       const result = await onboardStore({
+        mode,
         ownerEmail: form.ownerEmail.trim(),
-        password: form.password,
+        ...(mode === 'new' ? { password: form.password } : {}),
         name: form.name.trim(),
         address: form.address.trim(),
         lat: Number(form.lat),
@@ -134,7 +176,7 @@ export function Onboard() {
   return (
     <Page
       title="Onboard a store"
-      lede="Creates the store and an owner login. The owner adds a photo, perks, and promotions in the Hunt app."
+      lede="Add a store for a new owner, or attach it to an owner who already signs in."
       action={
         <Link className="btn btn--quiet" to="/stores">
           Back to stores
@@ -145,26 +187,69 @@ export function Onboard() {
         {formError ? <Banner tone="error">{formError}</Banner> : null}
         <fieldset>
           <legend>Owner</legend>
-          <Field id="owner-email" label="Email" error={errors.ownerEmail} hint="They sign in to the Hunt app with this.">
-            <input
+          <div className="filters" role="group" aria-label="Owner account">
+            <button type="button" aria-pressed={mode === 'new'} onClick={() => chooseMode('new')}>
+              New
+            </button>
+            <button type="button" aria-pressed={mode === 'existing'} onClick={() => chooseMode('existing')}>
+              Existing
+            </button>
+          </div>
+          {mode === 'new' ? (
+            <Field id="owner-email" label="Email" error={errors.ownerEmail} hint="They sign in to the Hunt app with this.">
+              <input
+                id="owner-email"
+                className="control"
+                type="email"
+                autoComplete="off"
+                value={form.ownerEmail}
+                onChange={(event) => set('ownerEmail', event.target.value)}
+                aria-invalid={Boolean(errors.ownerEmail)}
+                aria-describedby={describedBy('owner-email', {
+                  error: errors.ownerEmail,
+                  hint: true,
+                })}
+              />
+            </Field>
+          ) : (
+            <Field
               id="owner-email"
-              className="control"
-              type="email"
-              autoComplete="off"
-              value={form.ownerEmail}
-              onChange={(event) => set('ownerEmail', event.target.value)}
-              aria-invalid={Boolean(errors.ownerEmail)}
-              aria-describedby={describedBy('owner-email', {
-                error: errors.ownerEmail,
-                hint: true,
-              })}
-            />
-          </Field>
+              label="Email"
+              error={errors.ownerEmail || (owners.status === 'error' ? owners.error : '')}
+              hint={
+                owners.status === 'loading'
+                  ? 'Loading owners.'
+                  : owners.status === 'ready' && !owners.items.length
+                    ? 'No store owners yet. Use New to create one.'
+                    : 'The store is added to this login. The password stays the same.'
+              }
+            >
+              <select
+                id="owner-email"
+                className="control"
+                value={form.ownerEmail}
+                disabled={owners.status !== 'ready' || !owners.items.length}
+                onChange={(event) => set('ownerEmail', event.target.value)}
+                aria-invalid={Boolean(errors.ownerEmail)}
+                aria-describedby={describedBy('owner-email', { error: errors.ownerEmail || owners.error, hint: true })}
+              >
+                <option value="">{owners.status === 'loading' ? 'Loading owners' : 'Select an owner'}</option>
+                {owners.items.map((owner) => (
+                  <option key={owner.id} value={owner.email}>
+                    {owner.email}
+                    {owner.bannedAt ? ' (banned)' : ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {mode === 'new' ? (
+          <>
           <Field
             id="owner-password"
             label="Password"
             error={errors.password}
-            hint="Share this with the owner. It is kept only when the email is new."
+            hint="Share this with the owner."
           >
             <input
               id="owner-password"
@@ -203,6 +288,8 @@ export function Onboard() {
               {copied ? 'Copied' : 'Copy password'}
             </button>
           </div>
+          </>
+          ) : null}
         </fieldset>
 
         <fieldset>
