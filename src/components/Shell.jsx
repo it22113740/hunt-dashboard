@@ -6,8 +6,9 @@ import { useToast } from '../toast'
 const links = [
   { to: '/', label: 'Overview', end: true },
   { to: '/stores', label: 'Stores' },
-  { to: '/posts', label: 'Posts' },
-  { to: '/users', label: 'Users' },
+  { to: '/owners', label: 'Store Owners' },
+  { to: '/content', label: 'Content' },
+  { to: '/users', label: 'Creators' },
 ]
 
 export function Shell() {

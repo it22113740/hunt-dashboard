@@ -16,7 +16,7 @@ export function Posts() {
   const [q, setQ] = useState('')
   const [offset, setOffset] = useState(0)
   const desk = useQuery('overview', overview)
-  const stores = useQuery(`stores:rejected:${q}:${offset}`, () =>
+  const stores = useQuery(`stores:v3:rejected:${q}:${offset}`, () =>
     listStores({ q, offset, limit: LIMIT, sort: 'rejected' }),
   )
   const timer = useRef(0)
@@ -39,7 +39,7 @@ export function Posts() {
   const items = stores.data?.items ?? []
 
   return (
-    <Page title="Posts" lede="Approved and rejected photos and videos across every store.">
+    <Page title="Content" lede="Approved and rejected photos and videos across every store.">
       {desk.status === 'loading' ? <ScoreSkeleton /> : null}
       {desk.status === 'error' ? <Banner tone="error">{desk.error.message}</Banner> : null}
       {desk.status === 'ready' ? <ScoreSheet media={desk.data.media} /> : null}
@@ -61,7 +61,7 @@ export function Posts() {
       {stores.status === 'error' ? <Banner tone="error">{stores.error.message}</Banner> : null}
       {stores.status === 'ready' && items.length ? (
         <>
-          <StoreTable items={items} caption="Approved and rejected posts by store" />
+          <StoreTable items={items} caption="Approved and rejected content by store" />
           <Pager offset={stores.data.offset} limit={stores.data.limit} total={stores.data.total} onPage={onPage} />
         </>
       ) : null}
@@ -71,7 +71,7 @@ export function Posts() {
             'No stores match that search.'
           ) : (
             <>
-              No stores onboarded yet, so there are no posts to count.{' '}
+              No stores onboarded yet, so there is no content to count.{' '}
               <Link to="/stores/new">Onboard a store</Link>
             </>
           )}

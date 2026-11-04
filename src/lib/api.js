@@ -82,10 +82,28 @@ export function listStores(params) {
   return request(`/admin/stores${query(params)}`)
 }
 
+export function banStore(id, reason) {
+  return request(`/admin/stores/${encodeURIComponent(id)}/ban`, {
+    method: 'POST',
+    body: { reason },
+  }).then((data) => {
+    deskChanged()
+    return data
+  })
+}
+
+export function unbanStore(id) {
+  return request(`/admin/stores/${encodeURIComponent(id)}/unban`, { method: 'POST' }).then((data) => {
+    deskChanged()
+    return data
+  })
+}
+
 function deskChanged() {
   dropCache('overview')
   dropCache('stores:')
   dropCache('users:')
+  dropCache('creators')
   dropCache('owners')
 }
 

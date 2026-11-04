@@ -55,7 +55,7 @@ export function Login() {
           <h1>
             <Wordmark />
           </h1>
-          <p>The desk for stores, posts, and bans.</p>
+          <p>The desk for stores, content, and bans.</p>
         </div>
         <p className="login__mark">Superadmin</p>
       </section>

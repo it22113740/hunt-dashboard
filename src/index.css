@@ -315,6 +315,7 @@ textarea.control { min-height: 84px; resize: vertical; }
 .register__name { font-weight: 500; }
 .register__meta { margin-top: 2px; color: var(--mute); font-size: 14px; }
 .register__meta--danger { color: var(--danger); }
+.register__count { font-family: var(--figure); font-variant-numeric: tabular-nums; }
 
 .tally__ok, .tally__no { display: block; font-size: 14px; }
 .tally__ok { color: var(--good); }

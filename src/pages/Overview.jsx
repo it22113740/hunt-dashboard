@@ -9,7 +9,7 @@ import { formatCount } from '../lib/format'
 import { useQuery } from '../lib/query'
 
 export function Overview() {
-  const state = useQuery('overview', overview)
+  const state = useQuery('overview:v2', overview)
 
   return (
     <Page

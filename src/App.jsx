@@ -4,6 +4,7 @@ import { ToastProvider } from './toast'
 import { Shell } from './components/Shell'
 import { Login } from './pages/Login'
 import { Onboard } from './pages/Onboard'
+import { Owners } from './pages/Owners'
 import { Overview } from './pages/Overview'
 import { Posts } from './pages/Posts'
 import { Stores } from './pages/Stores'
@@ -21,7 +22,9 @@ export default function App() {
                 <Route index element={<Overview />} />
                 <Route path="stores" element={<Stores />} />
                 <Route path="stores/new" element={<Onboard />} />
-                <Route path="posts" element={<Posts />} />
+                <Route path="owners" element={<Owners />} />
+                <Route path="content" element={<Posts />} />
+                <Route path="posts" element={<Navigate to="/content" replace />} />
                 <Route path="users" element={<Users />} />
               </Route>
             </Route>

@@ -8,7 +8,7 @@ import { Pager } from '../components/Pager'
 import { UserTableSkeleton } from '../components/Skeleton'
 import { useToast } from '../toast'
 import { banUser, listUsers, unbanUser } from '../lib/api'
-import { formatDate, roleLabel } from '../lib/format'
+import { formatCount, formatDate } from '../lib/format'
 import { useQuery } from '../lib/query'
 
 const LIMIT = 25
@@ -24,7 +24,9 @@ export function Users() {
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('all')
   const [offset, setOffset] = useState(0)
-  const state = useQuery(`users:${q}:${status}:${offset}`, () => listUsers({ q, status, offset, limit: LIMIT }))
+  const state = useQuery(`creators:${q}:${status}:${offset}`, () =>
+    listUsers({ q, status, offset, limit: LIMIT, role: 'user' }),
+  )
   const [pending, setPending] = useState(null)
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
@@ -92,8 +94,8 @@ export function Users() {
 
   return (
     <Page
-      title="Users"
-      lede="Guests and store owners. Banning someone signs them out of the Hunt app and blocks the next login."
+      title="Creators"
+      lede="Guests on Hunt. Banning someone signs them out of the app and blocks the next login."
     >
       <form className="toolbar" role="search" onSubmit={(event) => event.preventDefault()}>
         <label className="search">
@@ -124,12 +126,12 @@ export function Users() {
         <>
           <div className="table-wrap">
             <table className="register">
-              <caption className="sr">Guests and store owners</caption>
+              <caption className="sr">Creators</caption>
               <thead>
                 <tr>
                   <th scope="col">Person</th>
-                  <th scope="col">Role</th>
                   <th scope="col">Joined</th>
+                  <th scope="col">Perks redeemed</th>
                   <th scope="col">Access</th>
                 </tr>
               </thead>
@@ -140,8 +142,8 @@ export function Users() {
                       <span className="register__name">{user.username || user.email}</span>
                       {user.username ? <span className="register__meta">{user.email}</span> : null}
                     </td>
-                    <td>{roleLabel(user.role)}</td>
                     <td>{formatDate(user.createdAt)}</td>
+                    <td className="register__count">{formatCount(user.perkRedemptions)}</td>
                     <td>
                       {user.bannedAt ? (
                         <>
@@ -182,7 +184,7 @@ export function Users() {
         </>
       ) : null}
       {state.status === 'ready' && !items.length ? (
-        <p className="empty">{q || status !== 'all' ? 'No one matches.' : 'No guests or store owners yet.'}</p>
+        <p className="empty">{q || status !== 'all' ? 'No one matches.' : 'No creators yet.'}</p>
       ) : null}
 
       <Dialog open={Boolean(pending)} title={banning ? 'Ban this account' : 'Restore access'} onClose={closeDialog}>
@@ -191,7 +193,7 @@ export function Users() {
             <p className="dialog__who">{pending.user.email}</p>
             {banning ? (
               <>
-                <p>They will not be able to sign in. Stores they own stay on Hunt.</p>
+                <p>They will not be able to sign in.</p>
                 {actionError ? <Banner tone="error">{actionError}</Banner> : null}
                 <Field id="ban-reason" label="Reason" error={reasonError}>
                   <textarea
